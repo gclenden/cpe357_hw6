@@ -1,15 +1,15 @@
-about to execute
-total 116
--rwx------. 1 gclenden domain users    17 May 29 11:23 file
-drwx------. 2 gclenden domain users  4096 May 28 18:33 handindir
--rw-------. 1 gclenden domain users   369 May 28 19:14 Makefile
--rwx------. 1 gclenden domain users 24456 May 29 11:22 mush
--rw-------. 1 gclenden domain users  3293 May 29 11:22 mush.c
--rw-------. 1 gclenden domain users   352 May 29 11:22 mush.h
--rw-------. 1 gclenden domain users  9272 May 29 11:22 mush.o
--rwx------. 1 gclenden domain users 18208 May 28 18:33 parseline
--rw-------. 1 gclenden domain users  6324 May 29 10:43 parseline.c
--rw-------. 1 gclenden domain users  1130 May 29 09:56 parseline.h
--rw-------. 1 gclenden domain users 16736 May 29 10:43 parseline.o
--rw-------. 1 gclenden domain users  7849 May 28 18:33 parselineOld.c
--rw-------. 1 gclenden domain users    26 May 28 18:33 README.md
+file
+file1
+file2
+handindir
+Makefile
+mush
+mush.c
+mush.h
+mush.o
+parseline
+parseline.c
+parseline.h
+parseline.o
+parselineOld.c
+README.md
