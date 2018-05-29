@@ -9,6 +9,8 @@
 
 #define PIPE_WR 1
 #define PIPE_RD 0
+#define STDIN 0
+#define STDOUT 1
 
 int setupStages(line *myLine, pid_t *ids);
 /*int executeStages(line *myLine,);

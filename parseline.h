@@ -7,15 +7,20 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <errno.h>
+#include <unistd.h>
 
 #define LINE_LEN_LIMIT 512
 #define PIPE_CMD_LIMIT 15
 #define CMD_ARG_LIMIT 15
 
+#define STDIN 0
+#define STDOUT 1
+
 typedef struct stageHeader stage;
 typedef struct lineData line;
 
-int fillLine(line *line);
+int fillLine(line *line, FILE *file);
 int fillStage(char *token, line *myLine);
 void printStages(line *line);
 int replace_white_space(char *token);

@@ -4,10 +4,21 @@ int main(int argc, char **argv)
 {
 	line myLine;
 	pid_t ids[PIPE_CMD_LIMIT];
-	int i;
+	int i, exitStatus;
+	FILE *input=NULL;
+
+	input = stdin;
+	if(argc==2)
+	{
+		if((input=fopen(argv[1], "r"))==NULL)
+		{
+			perror(argv[1]);
+			return 0;
+		}
+	}
 
 	/*while I haven't read in an eof*/
-	while((i=fillLine(&myLine))!=1)
+	while((i=fillLine(&myLine, input))!=1)
 	{
 		/*check to see if there was an error reading in*/
 		if(i<0)
@@ -18,7 +29,9 @@ int main(int argc, char **argv)
 
 		for(i=0; i<myLine.stageCount; i++)
 		{
-			wait(NULL);
+			wait(&exitStatus);
+			if(exitStatus==10)
+				;/*myCD();*/
 		}
 
 
@@ -39,8 +52,8 @@ int setupStages(line *myLine, pid_t *ids)
 	int i;
 	int prevPipe[2], currPipe[2];
 
-	memset(prevPipe, 0, 2);
-	memset(currPipe, 0, 2);
+	memset(prevPipe, 0, sizeof(prevPipe));
+	memset(currPipe, 0, sizeof(currPipe));
 
 	for(i=0; i<myLine->stageCount; i++)
 	{
@@ -54,51 +67,25 @@ int setupStages(line *myLine, pid_t *ids)
 		if((ids[i]=fork())==0)
 		{
 			myStage=myLine->stages+i;
+			
+			if(strcmp("cd", myStage->argv[0])==0)
+				exit(10);
 
 			if(dupStage(myStage, prevPipe, currPipe)<0) 
 				return -1;
-
-			/*
-
-			   if(myStage->inputFlag=='p')
-			   {
-			   pipein=1;
-			   if(dup2(pipes[i-1][0], stdin)<0)
-			   {
-			   perror("Dup2 pipe in");
-			   return -1;
-			   }
-			   }
-
-			   else if(myStage->inputFlag=='f')
-			   {
-
-
-			   if((pipeout=updateStageOutput(myStage, pipes+i-1, pipes+i))<0)
-			   return -1;			
-
-			   pipeout=0;
-			   if(myStage->outputFlag=='p')
-			   {
-			   pipeout=1;
-			   if(dup2(pipes[i][1], stdout)<0)
-			   {
-			   perror("Dup2 pipe out");
-			   return -1;
-			   }	
-			   }
-			   */
-
+	
 			if(cleanPipe(prevPipe)<0)
 				return -1;
-
+		
 			if(cleanPipe(currPipe)<0)
 				return -1;
-
+			
 			/*exec*/
 			if(execvp(myStage->argv[0], myStage->argv)<0)
 			{
-				perror(myStage->argv[0]);
+				/*perror(myStage->argv[0]);
+				*/
+				perror("execvp");	
 				return -1;
 			}
 		}
@@ -131,7 +118,7 @@ int setupStages(line *myLine, pid_t *ids)
 
 		if(myStage->inputFlag=='p')
 		{
-			if(dup2(prevPipe[PIPE_RD], STDIN_FILENO)<0)
+			if(dup2(prevPipe[PIPE_RD], STDIN)<0)
 			{
 				perror("Dup2 pipe in");
 				return -1;
@@ -146,7 +133,7 @@ int setupStages(line *myLine, pid_t *ids)
 				return -1;
 			}
 
-			if(dup2(file, STDIN_FILENO)<0)
+			if(dup2(file, STDIN)<0)
 			{
 				perror("dup2 file in");
 				return -1;
@@ -155,7 +142,7 @@ int setupStages(line *myLine, pid_t *ids)
 
 		if(myStage->outputFlag=='p')
 		{
-			if(dup2(currPipe[PIPE_WR], STDOUT_FILENO)<0)
+			if(dup2(currPipe[PIPE_WR], STDOUT)<0)
 			{
 				perror("Dup2 pipe out");
 				return -1;
@@ -170,7 +157,7 @@ int setupStages(line *myLine, pid_t *ids)
 				return -1;
 			}
 
-			if(dup2(file, STDOUT_FILENO)<0)
+			if(dup2(file, STDOUT)<0)
 			{
 				perror("dup2 file out");
 				return -1;

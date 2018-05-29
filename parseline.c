@@ -20,23 +20,42 @@ int main(void)
 	return 0;
 }
 */
-int fillLine(line *myLine)
+int fillLine(line *myLine, FILE *file)
 {
 	char *token=NULL;
 	char *toke_ptr=NULL;
 	int cmdcount=0;
+	int fd;
 
 	memset(myLine, 0, sizeof(line));
-	printf("8=p ");
+
+	/*might want to just check if the file is a stdin to see if it should be print the promt*/
+	if((fd=fileno(file))>0 && isatty(fd) && isatty(STDOUT))
+		printf("8=p ");
+	errno=0;
 	/*read in the command line string*/
-	if(fgets(myLine->line, sizeof(myLine->line)+1, stdin)==NULL)
+	if(fgets(myLine->line, sizeof(myLine->line)-1, file)==NULL)
 	{
-		perror("read cmdline");
+		if(errno!=0)
+		{
+			perror("read cmdline");
+			return -1;
+		}
+		
+		/*found eof -- time to stop the mush*/
+		else if(feof(file))	
+		{
+			if(file==stdin)
+				printf("\n");
+
+			return 1;
+		}
+
+		fprintf(stderr, "I don't know what happened\n");
 		return -1;
 	}
 
-	/*	printf("got line: %s\n", myLine->line);
-	*/	
+		
 	/*check to see if the line was too long*/
 	if(myLine->line[LINE_LEN_LIMIT])
 	{
