@@ -17,5 +17,8 @@ int setupStages(line *myLine, pid_t *ids);
 */
 int dupStage(stage *myStage, int *prevPipe, int *currPipe);
 int cleanPipe(int *pipe);
+int myCD(stage *myStage);
+void cdSigHandler();
+
 
 #endif

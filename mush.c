@@ -1,4 +1,6 @@
 #include "mush.h"
+
+static int cdReceived = 0;
  
 int main(int argc, char **argv)
 {
@@ -6,6 +8,16 @@ int main(int argc, char **argv)
 	pid_t ids[PIPE_CMD_LIMIT];
 	int i, exitStatus;
 	FILE *input=NULL;
+	struct sigaction cdSig;
+	cdSig.sa_handler = cdSigHandler;
+	cdSig.sa_flags = 0;
+	sigemptyset(&(cdSig.sa_mask));
+
+	if (sigaction(SIGUSR1, &cdSig, NULL) < 0)
+	{
+		perror("sigaction error");
+		return -1;
+	}
 
 	input = stdin;
 	if(argc==2)
@@ -30,8 +42,11 @@ int main(int argc, char **argv)
 		for(i=0; i<myLine.stageCount; i++)
 		{
 			wait(&exitStatus);
-			if(exitStatus==10)
-				;/*myCD();*/
+			if(cdReceived!=0) 
+			{
+				myCD(myLine.stages);
+				cdReceived = 0;
+			}
 		}
 
 
@@ -48,6 +63,7 @@ int main(int argc, char **argv)
 
 int setupStages(line *myLine, pid_t *ids)
 {
+	pid_t mainPID = getpid();
 	stage *myStage=NULL;
 	int i;
 	int prevPipe[2], currPipe[2];
@@ -69,8 +85,11 @@ int setupStages(line *myLine, pid_t *ids)
 			myStage=myLine->stages+i;
 			
 			if(strcmp("cd", myStage->argv[0])==0)
-				exit(10);
-
+			{
+				kill(mainPID, SIGUSR1);
+				exit(0);
+			}
+	
 			if(dupStage(myStage, prevPipe, currPipe)<0) 
 				return -1;
 	
@@ -185,3 +204,21 @@ int setupStages(line *myLine, pid_t *ids)
 	}
 
 	int executeStages(line *myLine, int *prevPipe, int *currPipe){return 0;}
+
+
+
+	int myCD(stage *myStage)
+	{
+		char *dir = myStage->argv[1];
+		if (chdir(dir) < 0) 
+		{
+			perror(dir);
+			return -1;
+		}
+		return 0;
+	}
+
+	void cdSigHandler()
+	{	
+		cdReceived++;
+	}	
