@@ -1,6 +1,8 @@
 #include "mush.h"
 
 static int cdReceived = 0;
+static int numChild = 0;
+
  
 int main(int argc, char **argv)
 {
@@ -8,12 +10,21 @@ int main(int argc, char **argv)
 	pid_t ids[PIPE_CMD_LIMIT];
 	int i, exitStatus;
 	FILE *input=NULL;
-	struct sigaction cdSig;
-	cdSig.sa_handler = cdSigHandler;
-	cdSig.sa_flags = 0;
-	sigemptyset(&(cdSig.sa_mask));
 
-	if (sigaction(SIGUSR1, &cdSig, NULL) < 0)
+	struct sigaction Sig;
+	Sig.sa_handler = SigHandler;
+	Sig.sa_flags = 0;
+	sigfillset(&(Sig.sa_mask));
+	sigdelset(&(Sig.sa_mask), SIGUSR1);
+	sigdelset(&(Sig.sa_mask), SIGINT); 
+
+	if (sigaction(SIGUSR1, &Sig, NULL) < 0)
+	{
+		perror("sigaction error");
+		return -1;
+	}
+
+	if (sigaction(SIGINT, &Sig, NULL) <0)
 	{
 		perror("sigaction error");
 		return -1;
@@ -218,7 +229,16 @@ int setupStages(line *myLine, pid_t *ids)
 		return 0;
 	}
 
-	void cdSigHandler()
+	void SigHandler(int signal)
 	{	
-		cdReceived++;
+		if (signal == SIGUSR1)
+			cdReceived++;
+		else if (signal == SIGINT) 
+		{
+			while (numChild > 0) 
+			{
+				wait(NULL);
+				numChild--;
+			}
+		}
 	}	
