@@ -15,14 +15,7 @@ int main(int argc, char **argv)
 	Sig.sa_handler = SigHandler;
 	Sig.sa_flags = 0;
 	sigfillset(&(Sig.sa_mask));
-	sigdelset(&(Sig.sa_mask), SIGUSR1);
 	sigdelset(&(Sig.sa_mask), SIGINT); 
-
-	if (sigaction(SIGUSR1, &Sig, NULL) < 0)
-	{
-		perror("sigaction error");
-		return -1;
-	}
 
 	if (sigaction(SIGINT, &Sig, NULL) <0)
 	{
@@ -50,17 +43,20 @@ int main(int argc, char **argv)
 		if(setupStages(&myLine, ids)!=0)
 			return 0;
 
-		for(i=0; i<myLine.stageCount; i++)
+		if(cdReceived)
 		{
 			wait(&exitStatus);
-			if(cdReceived!=0) 
-			{
-				myCD(myLine.stages);
-				cdReceived = 0;
-			}
+			myCD(myLine.stages);
+			cdReceived = 0;
 		}
-
-
+		
+		else
+			for(i=0; i<myLine.stageCount; i++)
+			{
+				wait(&exitStatus);
+				numChild--;
+			}
+	
 		fflush(NULL);
 		/*
 		   if(executeStages(&myLine, pipes)!=0)
@@ -74,7 +70,6 @@ int main(int argc, char **argv)
 
 int setupStages(line *myLine, pid_t *ids)
 {
-	pid_t mainPID = getpid();
 	stage *myStage=NULL;
 	int i;
 	int prevPipe[2], currPipe[2];
@@ -93,15 +88,16 @@ int setupStages(line *myLine, pid_t *ids)
 		/*child*/
 		if((ids[i]=fork())==0)
 		{
+			numChild++;
 			myStage=myLine->stages+i;
 			
 			if(strcmp("cd", myStage->argv[0])==0)
 			{
-				kill(mainPID, SIGUSR1);
-				exit(0);
+				cdReceived=1;
+				numChild--;
 			}
-	
-			if(dupStage(myStage, prevPipe, currPipe)<0) 
+
+			if(!cdReceived && dupStage(myStage, prevPipe, currPipe)<0) 
 				return -1;
 	
 			if(cleanPipe(prevPipe)<0)
@@ -111,13 +107,15 @@ int setupStages(line *myLine, pid_t *ids)
 				return -1;
 			
 			/*exec*/
-			if(execvp(myStage->argv[0], myStage->argv)<0)
+			if(!cdReceived && execvp(myStage->argv[0], myStage->argv)<0)
 			{
 				/*perror(myStage->argv[0]);
 				*/
 				perror("execvp");	
 				return -1;
 			}
+
+			return 0;
 		}
 
 		/*parent*/
@@ -231,12 +229,14 @@ int setupStages(line *myLine, pid_t *ids)
 
 	void SigHandler(int signal)
 	{	
-		if (signal == SIGUSR1)
-			cdReceived++;
-		else if (signal == SIGINT) 
+		if (signal == SIGINT) 
 		{
+			printf("handling sigint\n");
+			fflush(NULL);
 			while (numChild > 0) 
 			{
+				printf("\twaiting\n");
+				fflush(NULL);
 				wait(NULL);
 				numChild--;
 			}

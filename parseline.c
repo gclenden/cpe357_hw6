@@ -38,9 +38,15 @@ int fillLine(line *myLine, FILE *file)
 	{
 		if(errno!=0)
 		{
-			perror("read cmdline");
-			return -1;
-		}
+			if(errno==EINTR)
+				return -1;
+
+			else
+			{
+				perror("read cmdline");
+				return -1;
+			}
+		}	
 		
 		/*found eof -- time to stop the mush*/
 		else if(feof(file))	
