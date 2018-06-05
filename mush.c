@@ -6,7 +6,6 @@ static int numChild = 0;
 
 int main(int argc, char **argv)
 {
-	pid_t ppid = getpid();
 	line myLine;
 	pid_t ids[PIPE_CMD_LIMIT];
 	int i, exitStatus;
@@ -161,9 +160,9 @@ int setupStages(line *myLine, pid_t *ids, struct sigaction *oldSig)
 			/*exec*/
 			if(!cdReceived && execvp(myStage->argv[0], myStage->argv)<0)
 			{
-				/*perror(myStage->argv[0]);
-				*/
-				perror("execvp");	
+				perror(myStage->argv[0]);
+				
+				//perror("execvp");	
 				return -1;
 			}
 

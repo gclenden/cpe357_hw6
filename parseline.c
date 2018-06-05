@@ -31,7 +31,7 @@ int fillLine(line *myLine, FILE *file)
 
 	/*might want to just check if the file is a stdin to see if it should be print the promt*/
 	if((fd=fileno(file))>=0 && isatty(fd) && isatty(STDOUT))
-		printf("8=p ");
+		printf("8-P ");
 	errno=0;
 	/*read in the command line string*/
 	fflush(file);
@@ -66,7 +66,7 @@ int fillLine(line *myLine, FILE *file)
 	/*check to see if the line was too long*/
 	if(myLine->line[LINE_LEN_LIMIT])
 	{
-		fprintf(stderr, "command too long\n");
+		fprintf(stderr, "Command too long\n");
 		return -1;
 	}
 	/*
@@ -77,7 +77,7 @@ int fillLine(line *myLine, FILE *file)
 	{
 		if(++cmdcount>PIPE_CMD_LIMIT)
 		{
-			fprintf(stderr, "Too many arguments\n");
+			fprintf(stderr, "Pipeline too deep\n");
 			return -1;
 		}
 
@@ -119,14 +119,15 @@ int fillStage(char *token, line *myLine)
 		args[++i]=strtok_r(NULL, " ", &toke_ptr);	
 		if(i>CMD_ARG_LIMIT && args[i])
 		{
-			fprintf(stderr, "%s: too many arguments\n", args[0]);
+			//fprintf(stderr, "%s: Too many arguments\n", args[0]);
+			fprintf(stderr, "Too many arguments\n");
 			return -1;
 		}
 	}
 
 	if(args[0]==NULL)
 	{
-		fprintf(stderr, "invalid null command\n");
+		//fprintf(stderr, "Invalid null command\n");
 		return -1;
 	}
 

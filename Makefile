@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =-Wall -g
+CFLAGS =-Wall -Werror -g
 MAIN = mush
 OBJS = mush.o parseline.o
 
