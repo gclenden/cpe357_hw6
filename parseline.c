@@ -127,7 +127,8 @@ int fillStage(char *token, line *myLine)
 
 	if(args[0]==NULL)
 	{
-		//fprintf(stderr, "Invalid null command\n");
+		if(myLine->stageCount!=0)
+			fprintf(stderr, "Invalid null command\n");
 		return -1;
 	}
 
