@@ -30,10 +30,11 @@ int fillLine(line *myLine, FILE *file)
 	memset(myLine, 0, sizeof(line));
 
 	/*might want to just check if the file is a stdin to see if it should be print the promt*/
-	if((fd=fileno(file))>0 && isatty(fd) && isatty(STDOUT))
+	if((fd=fileno(file))>=0 && isatty(fd) && isatty(STDOUT))
 		printf("8=p ");
 	errno=0;
 	/*read in the command line string*/
+	fflush(file);
 	if(fgets(myLine->line, sizeof(myLine->line)-1, file)==NULL)
 	{
 		if(errno!=0)
@@ -43,7 +44,7 @@ int fillLine(line *myLine, FILE *file)
 
 			else
 			{
-				perror("read cmdline");
+				perror("Read Cmdline");
 				return -1;
 			}
 		}	
@@ -136,7 +137,7 @@ int fillStage(char *token, line *myLine)
 		myStage->inputFlag='p';
 		if(lastStage->outputFlag=='f')
 		{		
-			fprintf(stderr, "%s: ambiguous output\n", lastStage->argv[0]);
+			fprintf(stderr, "%s: Ambiguous Output\n", lastStage->argv[0]);
 			return -1;
 		}
 

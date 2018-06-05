@@ -11,8 +11,10 @@
 #define PIPE_RD 0
 #define STDIN 0
 #define STDOUT 1
+#define WAITERR -2
 
-int setupStages(line *myLine, pid_t *ids);
+int setupStages(line *myLine, pid_t *ids, struct sigaction *oldSig);
+int safeWait(int *exitStatus);
 /*int executeStages(line *myLine,);
 */
 int dupStage(stage *myStage, int *prevPipe, int *currPipe);
